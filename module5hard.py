@@ -41,3 +41,30 @@ class UrTube:
     def log_out(self):
         self.current_user = None
         print('Пользователь разлогинен')
+
+    def add(self, *videos):
+        for video in videos:
+            video_exists = False
+            for v in self.videos:
+                if v['name'] == video.name:
+                    video_exists = True
+                    break
+            if not video_exists:
+                self.videos.append({'name': video.name})
+                print(f'Видео {video.name} добавлено')
+
+    def get_videos(self, search_word):
+        search_word = search_word.lower()
+        result = []
+        for title, description in self.videos.items():
+            if search_word in description.lower():
+                result.append(title)
+        return result
+
+    def watch_video(self, video_title):
+        if video_title in self.videos:
+            self.current_video = video_title
+            self.current_time = 0
+            print(f"Смотрю {video_title} с {self.current_time} секунды")
+        else:
+            print("Видео не найдено")
