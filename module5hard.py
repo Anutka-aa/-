@@ -26,45 +26,40 @@ class UrTube:
         print('Такого пользователя не существует')
 
     def register(self, nickname, password, age):
-        user_exist = False
-        for user in self.users:
-            if user['nickname'] == nickname:
-                user_exist = True
-                print(f'Пользователь {nickname} уже существует')
-                break
-            if not user_exist:
-                new_user = {'nickname' = nickname, 'password' = password, 'age' = age}
-                self.users.append(new_user)
-                self.current_user = new_user
+        if nickname in self.users:
+            raise ValueError("Пользователь с таким ником уже существует.")
+        self.users[nickname] = User(nickname, password, age)
+        print(f"Пользователь {nickname} успешно зарегистрирован.")
 
 
-    def log_out(self):
-        self.current_user = None
-        print('Пользователь разлогинен')
+    def log_out(self, nickname):
+        if nickname not in self.users:
+            raise ValueError("Пользователь не найден.")
 
-    def add(self, *videos):
-        for video in videos:
-            video_exists = False
-            for v in self.videos:
-                if v['name'] == video.name:
-                    video_exists = True
-                    break
-            if not video_exists:
-                self.videos.append({'name': video.name})
-                print(f'Видео {video.name} добавлено')
+        print(f"Пользователь {nickname} успешно вышел из системы.")
 
-    def get_videos(self, search_word):
-        search_word = search_word.lower()
-        result = []
-        for title, description in self.videos.items():
-            if search_word in description.lower():
-                result.append(title)
-        return result
+    def add(self, title, description, adult_mode):
+        video = Video(title, description, adult_mode)
+        self.videos.append(video)
+        print(f"Видео {title} успешно добавлено.")
 
-    def watch_video(self, video_title):
-        if video_title in self.videos:
-            self.current_video = video_title
-            self.current_time = 0
-            print(f"Смотрю {video_title} с {self.current_time} секунды")
-        else:
-            print("Видео не найдено")
+     def get_videos(self):
+        return [
+            (video.title, video.description)
+            for video in self.videos
+            if not video.adult_mode or (video.adult_mode and any(user.adult_mode for user in self.users.values()))
+        ]
+
+    def watch_video(self, nickname, title):
+        user = self.users.get(nickname)
+        if not user:
+            raise ValueError("Пользователь не найден.")
+
+        for video in self.videos:
+            if video.title.lower() == title.lower():
+                if video.adult_mode and not user.adult_mode and user.age < 18:
+                    raise ValueError("Доступ запрещен: это видео предназначено для взрослых.")
+                video.time_now += 1  # Увеличение времени просмотра
+                return f"Вы смотрите видео: {video.title} - {video.description} на секунде {video.time_now}"
+
+        raise ValueError("Видео не найдено.")
